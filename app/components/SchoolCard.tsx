@@ -1,4 +1,6 @@
+// SchoolCard.tsx
 import React from 'react';
+import Link from 'next/link';
 import {
     MapPin,
     Users,
@@ -16,7 +18,6 @@ import {
     Check
 } from 'lucide-react';
 import { School } from '../types/school';
-import { useComparison } from '../contexts/ComparisonContext';
 
 interface SchoolCardProps {
     school: School;
@@ -24,10 +25,7 @@ interface SchoolCardProps {
     onViewDetails: (school: School) => void;
 }
 
-
 const SchoolCard: React.FC<SchoolCardProps> = ({ school, onContactClick, onViewDetails }) => {
-    const { addSchool, removeSchool, isSelected, canAddMore } = useComparison();
-
     const getTypeColor = (type: string) => {
         const colors = {
             'Public': 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -48,19 +46,18 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school, onContactClick, onViewD
         }
     };
 
-    const handleComparisonToggle = () => {
-        if (isSelected(school.id)) {
-            removeSchool(school.id);
-        } else if (canAddMore) {
-            addSchool(school);
-        }
-    };
+    // Create SEO-friendly URL slug for the school name
+    const schoolSlug = school.name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
 
-    const selected = isSelected(school.id);
+    // Create SEO-friendly slugs for city and state
+    const citySlug = school.location.city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const stateSlug = school.location.state.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
 
     return (
-        <div className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border group hover:border-gray-200 h-full flex flex-col ${selected ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-100'
-            }`}>
+        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border group hover:border-gray-200 h-full flex flex-col border-gray-100">
             {/* Header with Image and Overlay */}
             <div className="relative h-32 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                 <img
@@ -82,23 +79,6 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school, onContactClick, onViewD
                 <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center shadow-sm">
                     <Star className="h-3 w-3 text-amber-400 fill-amber-400 mr-1" />
                     <span className="text-xs font-semibold text-gray-800">{school.rating}</span>
-                </div>
-
-                {/* Comparison Toggle */}
-                <div className="absolute bottom-2 right-2">
-                    <button
-                        onClick={handleComparisonToggle}
-                        disabled={!selected && !canAddMore}
-                        className={`p-2 rounded-full transition-all ${selected
-                            ? 'bg-blue-600 text-white'
-                            : canAddMore
-                                ? 'bg-white/90 text-gray-600 hover:bg-white hover:text-blue-600'
-                                : 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                            }`}
-                        title={selected ? 'Remove from comparison' : 'Add to comparison'}
-                    >
-                        {selected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                    </button>
                 </div>
             </div>
 
@@ -190,13 +170,13 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school, onContactClick, onViewD
                             <MessageCircle className="h-3 w-3" />
                         </button>
                     </div>
-                    <button
-                        onClick={() => onViewDetails(school)}
+                    <Link
+                        href={`/schools/${schoolSlug}?city=${citySlug}&state=${stateSlug}&id=${school.id}`}
                         className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-xs transition-colors group/btn"
                     >
                         View Details
                         <ExternalLink className="h-3 w-3 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>

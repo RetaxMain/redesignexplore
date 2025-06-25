@@ -1,18 +1,18 @@
+
 export interface School {
     id: string;
     name: string;
     type: 'Public' | 'Private' | 'Charter' | 'International';
-    rating: number;
     location: {
+        address: string;
         city: string;
         state: string;
-        address: string;
         area: string;
     };
+    rating: number;
     students: number;
     establishedYear: number;
     tuitionFee?: number;
-    features: string[];
     description: string;
     image: string;
     website: string;
@@ -20,22 +20,12 @@ export interface School {
         phone: string;
         email: string;
     };
-    achievements: string[];
-    curriculum: string[];
+    features: string[];
     amenities: string[];
+    curriculum: string[];
+    achievements: string[];
     schoolBoard: string;
     medium: string[];
-    feeStructure: {
-        class1to5: number;
-        class6to8: number;
-        class9to10: number;
-        class11to12Science: number;
-        class11to12Commerce: number;
-        class11to12Arts: number;
-    };
-    admissionProcess: string[];
-    facultyCount: number;
-    studentTeacherRatio: string;
 }
 
 export interface FilterOptions {

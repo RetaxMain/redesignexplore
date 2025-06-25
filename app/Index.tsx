@@ -1,397 +1,173 @@
-
 "use client"
-import React, { useState, useMemo } from 'react';
-import { GraduationCap, Filter, BarChart3, Users, TrendingUp, Award } from 'lucide-react';
-import SearchFilters from './components/SearchFilters';
-import SchoolGrid from './components/SchoolGrid';
-import { mockSchools } from './data/mockSchools';
-import { FilterOptions, School } from './types/school';
-import ContactModal from './components/ContactModal';
-import SchoolDetails from './components/SchoolDetails';
+import React from 'react';
+import Link from 'next/link';
+import { GraduationCap, Search, TrendingUp, Users, Award, BarChart3 } from 'lucide-react';
 
-import ComparisonBar from './components/ComparisonBar';
-import { ComparisonProvider, useComparison } from './contexts/ComparisonContext';
-import SchoolComparison from './components/SchoolComparison';
+const Index = () => {
+    const stats = [
+        { icon: BarChart3, value: '500+', label: 'Schools Listed', color: 'text-blue-600' },
+        { icon: Users, value: '250K+', label: 'Students Enrolled', color: 'text-green-600' },
+        { icon: TrendingUp, value: '4.5', label: 'Average Rating', color: 'text-purple-600' },
+        { icon: Award, value: '1200+', label: 'Total Awards', color: 'text-orange-600' }
+    ];
 
-function ExplorePageContent() {
-    const [filters, setFilters] = useState<FilterOptions>({
-        searchTerm: '',
-        schoolType: [],
-        minRating: 0,
-        state: '',
-        city: '',
-        area: '',
-        maxTuition: 50000,
-        amenities: [],
-        schoolBoard: [],
-        medium: []
-    });
-
-    const [showFilters, setShowFilters] = useState(true);
-    const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
-    const [showComparison, setShowComparison] = useState(false);
-    const [contactModal, setContactModal] = useState<{
-        isOpen: boolean;
-        type: 'phone' | 'whatsapp';
-        school: School | null;
-    }>({
-        isOpen: false,
-        type: 'phone',
-        school: null
-    });
-
-    const { selectedSchools } = useComparison();
-
-    const filteredSchools = useMemo(() => {
-        return mockSchools.filter(school => {
-            // Search term filter
-            if (filters.searchTerm) {
-                const searchLower = filters.searchTerm.toLowerCase();
-                const matchesSearch =
-                    school.name.toLowerCase().includes(searchLower) ||
-                    school.location.city.toLowerCase().includes(searchLower) ||
-                    school.location.area.toLowerCase().includes(searchLower) ||
-                    school.description.toLowerCase().includes(searchLower) ||
-                    school.features.some(feature => feature.toLowerCase().includes(searchLower)) ||
-                    school.amenities.some(amenity => amenity.toLowerCase().includes(searchLower)) ||
-                    school.curriculum.some(curr => curr.toLowerCase().includes(searchLower));
-
-                if (!matchesSearch) return false;
-            }
-
-            // School type filter
-            if (filters.schoolType.length > 0 && !filters.schoolType.includes(school.type)) {
-                return false;
-            }
-
-            // Rating filter
-            if (school.rating < filters.minRating) {
-                return false;
-            }
-
-            // Location filters
-            if (filters.state && school.location.state !== filters.state) {
-                console.log(`Comparing State: Filter: '${filters.state}' vs School: '${school.location.state}' - Match: ${school.location.state === filters.state}`);
-                return false;
-            }
-            if (filters.city && school.location.city !== filters.city) {
-                console.log(`Comparing City: Filter: '${filters.city}' vs School: '${school.location.city}' - Match: ${school.location.city === filters.city}`);
-                return false;
-            }
-            if (filters.area && school.location.area !== filters.area) {
-                console.log(`Comparing Area: Filter: '${filters.area}' vs School: '${school.location.area}' - Match: ${school.location.area === filters.area}`);
-                return false;
-            }
-
-            // Tuition filter
-            if (school.tuitionFee && school.tuitionFee > filters.maxTuition) {
-                return false;
-            }
-
-            // Amenities filter
-            if (filters.amenities.length > 0) {
-                const hasAmenities = filters.amenities.every(amenity =>
-                    school.amenities.includes(amenity)
-                );
-                if (!hasAmenities) return false;
-            }
-
-            // School Board filter
-            if (filters.schoolBoard.length > 0 && !filters.schoolBoard.includes(school.schoolBoard)) {
-                return false;
-            }
-
-            // Medium filter
-            if (filters.medium.length > 0) {
-                const hasMedium = filters.medium.some(medium =>
-                    school.medium.includes(medium)
-                );
-                if (!hasMedium) return false;
-            }
-
-            return true;
-        });
-    }, [filters]);
-
-    // Calculate stats
-    const stats = useMemo(() => {
-        const totalStudents = mockSchools.reduce((sum, school) => sum + school.students, 0);
-        const avgRating = mockSchools.reduce((sum, school) => sum + school.rating, 0) / mockSchools.length;
-        const totalAchievements = mockSchools.reduce((sum, school) => sum + school.achievements.length, 0);
-
-        return {
-            totalSchools: mockSchools.length,
-            totalStudents: Math.round(totalStudents / 1000),
-            avgRating: avgRating.toFixed(1),
-            totalAchievements
-        };
-    }, []);
-
-    const handleContactClick = (type: 'phone' | 'whatsapp', school: School) => {
-        setContactModal({
-            isOpen: true,
-            type,
-            school
-        });
-    };
-
-    const handleViewDetails = (school: School) => {
-        setSelectedSchool(school);
-    };
-
-    const handleBackToList = () => {
-        setSelectedSchool(null);
-        setShowComparison(false);
-    };
-
-    const handleContactModalClose = () => {
-        setContactModal({
-            isOpen: false,
-            type: 'phone',
-            school: null
-        });
-    };
-
-    const handleShowComparison = () => {
-        setShowComparison(true);
-    };
-
-    // If comparison is shown, show comparison page
-    if (showComparison) {
-        return (
-            <>
-                <SchoolComparison
-                    onBack={handleBackToList}
-                    onContactClick={handleContactClick}
-                    availableSchools={mockSchools}
-                />
-                <ContactModal
-                    isOpen={contactModal.isOpen}
-                    onClose={handleContactModalClose}
-                    type={contactModal.type}
-                    schoolName={contactModal.school?.name || ''}
-                />
-            </>
-        );
-    }
-
-    // If a school is selected, show details page
-    if (selectedSchool) {
-        return (
-            <>
-                <SchoolDetails
-                    school={selectedSchool}
-                    onBack={handleBackToList}
-                    onContactClick={(type) => handleContactClick(type, selectedSchool)}
-                />
-                <ContactModal
-                    isOpen={contactModal.isOpen}
-                    onClose={handleContactModalClose}
-                    type={contactModal.type}
-                    schoolName={contactModal.school?.name || ''}
-                />
-            </>
-        );
-    }
-
-    const handleFiltersChange = (newFilters: FilterOptions) => {
-        console.log("ExplorePageContent: Received new filters:", newFilters); // ADD THIS LOG
-        setFilters(newFilters);
-    };
+    const features = [
+        {
+            title: 'Advanced Search',
+            description: 'Find schools by location, type, curriculum, and more with our powerful search filters.',
+            icon: Search
+        },
+        {
+            title: 'School Comparison',
+            description: 'Compare multiple schools side-by-side to make the best decision for your child.',
+            icon: BarChart3
+        },
+        {
+            title: 'Detailed Profiles',
+            description: 'Access comprehensive information about each school including facilities, achievements, and contact details.',
+            icon: GraduationCap
+        }
+    ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-white">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center">
-                            <div className="flex items-center space-x-3">
-                                <div className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg">
-                                    <GraduationCap className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <h1 className="text-xl font-bold text-gray-900">Schoogle</h1>
-                                    <p className="text-sm text-gray-600">Premium School Analytics</p>
-                                </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg">
+                                <GraduationCap className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-900">Schoogle</h1>
+                                <p className="text-xs text-gray-600">Premium School Analytics</p>
                             </div>
                         </div>
-
-                        {/* Stats Bar */}
-                        <div className="hidden md:flex items-center space-x-6 text-sm">
-                            <div className="flex items-center space-x-1">
-                                <BarChart3 className="h-4 w-4 text-blue-600" />
-                                <span className="font-semibold text-gray-900">{filteredSchools.length}</span>
-                                <span className="text-gray-600">Results</span>
-                            </div>
-                            {selectedSchools.length > 0 && (
-                                <>
-                                    <div className="w-px h-4 bg-gray-300" />
-                                    <div className="flex items-center space-x-1">
-                                        <BarChart3 className="h-4 w-4 text-purple-600" />
-                                        <span className="font-semibold text-purple-900">{selectedSchools.length}</span>
-                                        <span className="text-gray-600">Selected</span>
-                                    </div>
-                                </>
-                            )}
-                            <div className="w-px h-4 bg-gray-300" />
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors ${showFilters
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                            >
-                                <Filter className="h-4 w-4" />
-                                <span>Filters</span>
-                            </button>
-                        </div>
+                        <nav className="hidden md:flex items-center space-x-8">
+                            <Link href="/schools" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                                Browse Schools
+                            </Link>
+                            <Link href="/schools" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                Get Started
+                            </Link>
+                        </nav>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            {/* Hero Stats Section */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-8">
+            {/* Hero Section */}
+            <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-6">
-                        <h2 className="text-3xl font-bold mb-2">Educational Excellence Dashboard</h2>
-                        <p className="text-blue-100 text-lg">Comprehensive school analytics and insights</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div className="text-center">
-                            <div className="flex items-center justify-center mb-2">
-                                <BarChart3 className="h-6 w-6 text-blue-200 mr-2" />
-                                <span className="text-2xl font-bold">{stats.totalSchools}</span>
-                            </div>
-                            <p className="text-blue-100 text-sm">Total Schools</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center mb-2">
-                                <Users className="h-6 w-6 text-blue-200 mr-2" />
-                                <span className="text-2xl font-bold">{stats.totalStudents}K</span>
-                            </div>
-                            <p className="text-blue-100 text-sm">Students Enrolled</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center mb-2">
-                                <TrendingUp className="h-6 w-6 text-blue-200 mr-2" />
-                                <span className="text-2xl font-bold">{stats.avgRating}</span>
-                            </div>
-                            <p className="text-blue-100 text-sm">Avg Rating</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center mb-2">
-                                <Award className="h-6 w-6 text-blue-200 mr-2" />
-                                <span className="text-2xl font-bold">{stats.totalAchievements}</span>
-                            </div>
-                            <p className="text-blue-100 text-sm">Total Awards</p>
+                    <div className="text-center">
+                        <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                            Find the Perfect
+                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">
+                                School for Your Child
+                            </span>
+                        </h1>
+                        <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+                            Discover and compare top educational institutions with our comprehensive school directory.
+                            Make informed decisions with detailed insights and analytics.
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                            <Link href="/schools" className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg">
+                                Explore Schools
+                            </Link>
+                            <Link href="/schools" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                                Advanced Search
+                            </Link>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Filters */}
-                {showFilters && (
-                    <SearchFilters
-                        filters={filters}
-                        onFiltersChange={handleFiltersChange} // Use this new handler
-                    />
-                )}
+            {/* Stats Section */}
+            <section className="py-16 bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">Trusted by Thousands</h2>
+                        <p className="text-lg text-gray-600">Join families who have found their perfect school match</p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                        {stats.map((stat, index) => (
+                            <div key={index} className="text-center">
+                                <div className="flex items-center justify-center mb-4">
+                                    <div className="p-3 bg-white rounded-full shadow-md">
+                                        <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                                    </div>
+                                </div>
+                                <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
+                                <div className="text-gray-600">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
-                {/* Results Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                            {filteredSchools.length} Schools Found
-                        </h3>
-                        <p className="text-gray-600 text-sm mt-1">
-                            Showing all {filteredSchools.length} educational institutions
+            {/* Features Section */}
+            <section className="py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                            Why Choose Schoogle?
+                        </h2>
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            We provide comprehensive tools and insights to help you make the best educational decisions for your family.
                         </p>
                     </div>
-
-                    {(filters.searchTerm || filters.schoolType.length > 0 || filters.state || filters.city ||
-                        filters.area || filters.amenities.length > 0 || filters.schoolBoard.length > 0 ||
-                        filters.medium.length > 0) && (
-                            <button
-                                onClick={() => setFilters({
-                                    searchTerm: '',
-                                    schoolType: [],
-                                    minRating: 0,
-                                    state: '',
-                                    city: '',
-                                    area: '',
-                                    maxTuition: 50000,
-                                    amenities: [],
-                                    schoolBoard: [],
-                                    medium: []
-                                })}
-                                className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
-                            >
-                                Reset Filters
-                            </button>
-                        )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        {features.map((feature, index) => (
+                            <div key={index} className="text-center group">
+                                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6 group-hover:bg-blue-200 transition-colors">
+                                    <feature.icon className="h-8 w-8 text-blue-600" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
+                                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+            </section>
 
-                {/* School Grid - Exactly 12 cards */}
-                <SchoolGrid
-                    schools={filteredSchools.slice(0, 12)}
-                    onContactClick={handleContactClick}
-                    onViewDetails={handleViewDetails}
-                />
-
-                {/* Pagination Info */}
-                <div className="text-center mt-8 p-4 bg-white rounded-lg border border-gray-200">
-                    <p className="text-gray-600 text-sm">
-                        Showing <span className="font-semibold">{Math.min(filteredSchools.length, 12)}</span> of{' '}
-                        <span className="font-semibold">{filteredSchools.length}</span> schools
+            {/* CTA Section */}
+            <section className="bg-gray-900 text-white py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 className="text-3xl font-bold mb-4">Ready to Find Your Perfect School?</h2>
+                    <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
+                        Start exploring our comprehensive database of schools and find the perfect match for your child's educational journey.
                     </p>
-                    {filteredSchools.length > 12 && (
-                        <button className="mt-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                            Load More Schools
-                        </button>
-                    )}
+                    <Link href="/schools" className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center space-x-2">
+                        <Search className="h-5 w-5" />
+                        <span>Start Your Search</span>
+                    </Link>
                 </div>
-            </div>
+            </section>
 
             {/* Footer */}
-            <footer className="bg-gray-900 text-white py-8 mt-12">
+            <footer className="bg-gray-50 border-t border-gray-200 py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
                         <div className="flex items-center justify-center space-x-3 mb-4">
                             <div className="p-2 bg-blue-600 rounded-lg">
-                                <GraduationCap className="h-5 w-5 text-white" />
+                                <GraduationCap className="h-6 w-6 text-white" />
                             </div>
-                            <span className="text-lg font-bold">Schoogle</span>
+                            <span className="text-xl font-bold text-gray-900">Schoogle</span>
                         </div>
-                        <p className="text-gray-400 text-sm max-w-2xl mx-auto">
+                        <p className="text-gray-600 max-w-2xl mx-auto">
                             Advanced educational analytics platform providing comprehensive insights
                             into academic institutions and performance metrics.
                         </p>
+                        <div className="mt-8 pt-8 border-t border-gray-200">
+                            <p className="text-sm text-gray-500">
+                                © 2024 Schoogle. All rights reserved.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </footer>
-
-            {/* Comparison Bar */}
-            <ComparisonBar onCompare={handleShowComparison} />
-
-            {/* Contact Modal */}
-            <ContactModal
-                isOpen={contactModal.isOpen}
-                onClose={handleContactModalClose}
-                type={contactModal.type}
-                schoolName={contactModal.school?.name || ''}
-            />
         </div>
     );
-}
+};
 
-export default function Index() {
-    return (
-        <ComparisonProvider>
-            <ExplorePageContent />
-        </ComparisonProvider>
-    );
-}
+export default Index;
