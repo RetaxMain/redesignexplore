@@ -4,9 +4,11 @@ import SchoolCard from './SchoolCard';
 
 interface SchoolGridProps {
     schools: School[];
+    onContactClick: (type: 'phone' | 'whatsapp', school: School) => void;
+    onViewDetails: (school: School) => void;
 }
 
-const SchoolGrid: React.FC<SchoolGridProps> = ({ schools }) => {
+const SchoolGrid: React.FC<SchoolGridProps> = ({ schools, onContactClick, onViewDetails }) => {
     if (schools.length === 0) {
         return (
             <div className="text-center py-12">
@@ -24,7 +26,12 @@ const SchoolGrid: React.FC<SchoolGridProps> = ({ schools }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {schools.map(school => (
-                <SchoolCard key={school.id} school={school} />
+                <SchoolCard
+                    key={school.id}
+                    school={school}
+                    onContactClick={onContactClick}
+                    onViewDetails={onViewDetails}
+                />
             ))}
         </div>
     );

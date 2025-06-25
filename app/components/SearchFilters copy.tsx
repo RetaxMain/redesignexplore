@@ -111,90 +111,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
     console.log('Current City:', filters.city);
     console.log('Available Cities:', availableCities);
     console.log('Available Areas:', availableAreas);
-    const renderActiveFilterTags = () => {
-        const tags = [];
-
-        if (filters.searchTerm) {
-            tags.push(
-                <span key="searchTerm" className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    Search: "{filters.searchTerm}"
-                </span>
-            );
-        }
-
-        if (filters.schoolType.length > 0) {
-            tags.push(
-                <span key="schoolType" className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    {filters.schoolType.length} School Type{filters.schoolType.length > 1 ? 's' : ''}
-                </span>
-            );
-        }
-
-        if (filters.state) {
-            const fullStateName = Object.keys(stateAbbreviationsMap).find(key => stateAbbreviationsMap[key] === filters.state) || filters.state;
-            tags.push(
-                <span key="state" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    State: {fullStateName}
-                </span>
-            );
-        }
-        if (filters.city) {
-            tags.push(
-                <span key="city" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    City: {filters.city}
-                </span>
-            );
-        }
-        if (filters.area) {
-            tags.push(
-                <span key="area" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    Area: {filters.area}
-                </span>
-            );
-        }
-
-        if (filters.amenities.length > 0) {
-            tags.push(
-                <span key="amenities" className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">
-                    {filters.amenities.length} Amenity{filters.amenities.length > 1 ? 's' : ''}
-                </span>
-            );
-        }
-
-        if (filters.schoolBoard.length > 0) {
-            tags.push(
-                <span key="schoolBoard" className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                    {filters.schoolBoard.length} Board{filters.schoolBoard.length > 1 ? 's' : ''}
-                </span>
-            );
-        }
-
-        if (filters.medium.length > 0) {
-            tags.push(
-                <span key="medium" className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                    {filters.medium.length} Medium{filters.medium.length > 1 ? 's' : ''}
-                </span>
-            );
-        }
-
-        if (filters.minRating > 0) {
-            tags.push(
-                <span key="minRating" className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
-                    Min Rating: {filters.minRating}+ Stars
-                </span>
-            );
-        }
-
-        if (filters.maxTuition < 50000) {
-            tags.push(
-                <span key="maxTuition" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    Max Tuition: ${filters.maxTuition.toLocaleString()}
-                </span>
-            );
-        }
-
-        return tags;
-    };
 
 
     return (
@@ -211,7 +127,16 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
                     </div>
                     {hasActiveFilters && (
                         <span className="ml-4 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">
-                            {renderActiveFilterTags().length} Active Filter{renderActiveFilterTags().length !== 1 ? 's' : ''}
+                            {[
+                                filters.searchTerm && 'Search',
+                                filters.schoolType.length && `${filters.schoolType.length} Type${filters.schoolType.length > 1 ? 's' : ''}`,
+                                // Display the full state name for active filters for better UX
+                                filters.state && (Object.keys(stateAbbreviationsMap).find(key => stateAbbreviationsMap[key] === filters.state) || filters.state),
+                                filters.amenities.length && `${filters.amenities.length} Amenities`,
+                                filters.schoolBoard.length && `${filters.schoolBoard.length} Board${filters.schoolBoard.length > 1 ? 's' : ''}`,
+                                filters.medium.length && `${filters.medium.length} Medium${filters.medium.length > 1 ? 's' : ''}`,
+                                filters.minRating > 0 && 'Rating'
+                            ].filter(Boolean).join(', ')}
                         </span>
                     )}
                 </div>

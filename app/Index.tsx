@@ -1,3 +1,4 @@
+
 "use client"
 import React, { useState, useMemo } from 'react';
 import { GraduationCap, Filter, BarChart3, Users, TrendingUp, Award } from 'lucide-react';
@@ -8,8 +9,11 @@ import { FilterOptions, School } from './types/school';
 import ContactModal from './components/ContactModal';
 import SchoolDetails from './components/SchoolDetails';
 
+import ComparisonBar from './components/ComparisonBar';
+import { ComparisonProvider, useComparison } from './contexts/ComparisonContext';
+import SchoolComparison from './components/SchoolComparison';
 
-export default function Explorepage() {
+function ExplorePageContent() {
     const [filters, setFilters] = useState<FilterOptions>({
         searchTerm: '',
         schoolType: [],
@@ -25,6 +29,7 @@ export default function Explorepage() {
 
     const [showFilters, setShowFilters] = useState(true);
     const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+    const [showComparison, setShowComparison] = useState(false);
     const [contactModal, setContactModal] = useState<{
         isOpen: boolean;
         type: 'phone' | 'whatsapp';
@@ -34,6 +39,8 @@ export default function Explorepage() {
         type: 'phone',
         school: null
     });
+
+    const { selectedSchools } = useComparison();
 
     const filteredSchools = useMemo(() => {
         return mockSchools.filter(school => {
@@ -64,12 +71,15 @@ export default function Explorepage() {
 
             // Location filters
             if (filters.state && school.location.state !== filters.state) {
+                console.log(`Comparing State: Filter: '${filters.state}' vs School: '${school.location.state}' - Match: ${school.location.state === filters.state}`);
                 return false;
             }
             if (filters.city && school.location.city !== filters.city) {
+                console.log(`Comparing City: Filter: '${filters.city}' vs School: '${school.location.city}' - Match: ${school.location.city === filters.city}`);
                 return false;
             }
             if (filters.area && school.location.area !== filters.area) {
+                console.log(`Comparing Area: Filter: '${filters.area}' vs School: '${school.location.area}' - Match: ${school.location.area === filters.area}`);
                 return false;
             }
 
@@ -131,6 +141,7 @@ export default function Explorepage() {
 
     const handleBackToList = () => {
         setSelectedSchool(null);
+        setShowComparison(false);
     };
 
     const handleContactModalClose = () => {
@@ -140,6 +151,29 @@ export default function Explorepage() {
             school: null
         });
     };
+
+    const handleShowComparison = () => {
+        setShowComparison(true);
+    };
+
+    // If comparison is shown, show comparison page
+    if (showComparison) {
+        return (
+            <>
+                <SchoolComparison
+                    onBack={handleBackToList}
+                    onContactClick={handleContactClick}
+                    availableSchools={mockSchools}
+                />
+                <ContactModal
+                    isOpen={contactModal.isOpen}
+                    onClose={handleContactModalClose}
+                    type={contactModal.type}
+                    schoolName={contactModal.school?.name || ''}
+                />
+            </>
+        );
+    }
 
     // If a school is selected, show details page
     if (selectedSchool) {
@@ -160,6 +194,11 @@ export default function Explorepage() {
         );
     }
 
+    const handleFiltersChange = (newFilters: FilterOptions) => {
+        console.log("ExplorePageContent: Received new filters:", newFilters); // ADD THIS LOG
+        setFilters(newFilters);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -172,7 +211,7 @@ export default function Explorepage() {
                                     <GraduationCap className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl font-bold text-gray-900">EduFinder</h1>
+                                    <h1 className="text-xl font-bold text-gray-900">Schoogle</h1>
                                     <p className="text-sm text-gray-600">Premium School Analytics</p>
                                 </div>
                             </div>
@@ -185,6 +224,16 @@ export default function Explorepage() {
                                 <span className="font-semibold text-gray-900">{filteredSchools.length}</span>
                                 <span className="text-gray-600">Results</span>
                             </div>
+                            {selectedSchools.length > 0 && (
+                                <>
+                                    <div className="w-px h-4 bg-gray-300" />
+                                    <div className="flex items-center space-x-1">
+                                        <BarChart3 className="h-4 w-4 text-purple-600" />
+                                        <span className="font-semibold text-purple-900">{selectedSchools.length}</span>
+                                        <span className="text-gray-600">Selected</span>
+                                    </div>
+                                </>
+                            )}
                             <div className="w-px h-4 bg-gray-300" />
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
@@ -248,7 +297,7 @@ export default function Explorepage() {
                 {showFilters && (
                     <SearchFilters
                         filters={filters}
-                        onFiltersChange={setFilters}
+                        onFiltersChange={handleFiltersChange} // Use this new handler
                     />
                 )}
 
@@ -315,7 +364,7 @@ export default function Explorepage() {
                             <div className="p-2 bg-blue-600 rounded-lg">
                                 <GraduationCap className="h-5 w-5 text-white" />
                             </div>
-                            <span className="text-lg font-bold">EduFinder</span>
+                            <span className="text-lg font-bold">Schoogle</span>
                         </div>
                         <p className="text-gray-400 text-sm max-w-2xl mx-auto">
                             Advanced educational analytics platform providing comprehensive insights
@@ -325,6 +374,9 @@ export default function Explorepage() {
                 </div>
             </footer>
 
+            {/* Comparison Bar */}
+            <ComparisonBar onCompare={handleShowComparison} />
+
             {/* Contact Modal */}
             <ContactModal
                 isOpen={contactModal.isOpen}
@@ -333,5 +385,13 @@ export default function Explorepage() {
                 schoolName={contactModal.school?.name || ''}
             />
         </div>
+    );
+}
+
+export default function Index() {
+    return (
+        <ComparisonProvider>
+            <ExplorePageContent />
+        </ComparisonProvider>
     );
 }

@@ -3,24 +3,31 @@ import {
     MapPin,
     Users,
     Calendar,
+    DollarSign,
     Star,
     Award,
     ExternalLink,
     Phone,
-    Mail,
+    MessageCircle,
     BookOpen,
     TrendingUp,
     Shield,
-    IndianRupee
-
+    Plus,
+    Check
 } from 'lucide-react';
 import { School } from '../types/school';
+import { useComparison } from '../contexts/ComparisonContext';
 
 interface SchoolCardProps {
     school: School;
+    onContactClick: (type: 'phone' | 'whatsapp', school: School) => void;
+    onViewDetails: (school: School) => void;
 }
 
-const SchoolCard: React.FC<SchoolCardProps> = ({ school }) => {
+
+const SchoolCard: React.FC<SchoolCardProps> = ({ school, onContactClick, onViewDetails }) => {
+    const { addSchool, removeSchool, isSelected, canAddMore } = useComparison();
+
     const getTypeColor = (type: string) => {
         const colors = {
             'Public': 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -41,8 +48,19 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school }) => {
         }
     };
 
+    const handleComparisonToggle = () => {
+        if (isSelected(school.id)) {
+            removeSchool(school.id);
+        } else if (canAddMore) {
+            addSchool(school);
+        }
+    };
+
+    const selected = isSelected(school.id);
+
     return (
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 group hover:border-gray-200 h-full flex flex-col">
+        <div className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border group hover:border-gray-200 h-full flex flex-col ${selected ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-100'
+            }`}>
             {/* Header with Image and Overlay */}
             <div className="relative h-32 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                 <img
@@ -64,6 +82,23 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school }) => {
                 <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center shadow-sm">
                     <Star className="h-3 w-3 text-amber-400 fill-amber-400 mr-1" />
                     <span className="text-xs font-semibold text-gray-800">{school.rating}</span>
+                </div>
+
+                {/* Comparison Toggle */}
+                <div className="absolute bottom-2 right-2">
+                    <button
+                        onClick={handleComparisonToggle}
+                        disabled={!selected && !canAddMore}
+                        className={`p-2 rounded-full transition-all ${selected
+                            ? 'bg-blue-600 text-white'
+                            : canAddMore
+                                ? 'bg-white/90 text-gray-600 hover:bg-white hover:text-blue-600'
+                                : 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                            }`}
+                        title={selected ? 'Remove from comparison' : 'Add to comparison'}
+                    >
+                        {selected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    </button>
                 </div>
             </div>
 
@@ -109,11 +144,11 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school }) => {
                 {school.tuitionFee && (
                     <div className="flex items-center justify-between mb-3 p-2 bg-blue-50 rounded-lg">
                         <div className="flex items-center">
-                            <IndianRupee className="h-3 w-3 text-blue-600 mr-1" />
+                            <DollarSign className="h-3 w-3 text-blue-600 mr-1" />
                             <span className="text-xs font-medium text-blue-900">Annual Tuition</span>
                         </div>
                         <span className="text-xs font-bold text-blue-900">
-                            ₹{(school.tuitionFee / 1000).toFixed(0)}K
+                            ${(school.tuitionFee / 1000).toFixed(0)}K
                         </span>
                     </div>
                 )}
@@ -140,14 +175,25 @@ const SchoolCard: React.FC<SchoolCardProps> = ({ school }) => {
                 {/* Actions - Fixed at bottom */}
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
                     <div className="flex space-x-2">
-                        <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
+                        <button
+                            onClick={() => onContactClick('phone', school)}
+                            className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                            title="Request Call Back"
+                        >
                             <Phone className="h-3 w-3" />
                         </button>
-                        <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                            <Mail className="h-3 w-3" />
+                        <button
+                            onClick={() => onContactClick('whatsapp', school)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            title="WhatsApp Inquiry"
+                        >
+                            <MessageCircle className="h-3 w-3" />
                         </button>
                     </div>
-                    <button className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-xs transition-colors group/btn">
+                    <button
+                        onClick={() => onViewDetails(school)}
+                        className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-xs transition-colors group/btn"
+                    >
                         View Details
                         <ExternalLink className="h-3 w-3 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
                     </button>

@@ -7,6 +7,7 @@ export interface School {
         city: string;
         state: string;
         address: string;
+        area: string;
     };
     students: number;
     establishedYear: number;
@@ -21,13 +22,31 @@ export interface School {
     };
     achievements: string[];
     curriculum: string[];
+    amenities: string[];
+    schoolBoard: string;
+    medium: string[];
+    feeStructure: {
+        class1to5: number;
+        class6to8: number;
+        class9to10: number;
+        class11to12Science: number;
+        class11to12Commerce: number;
+        class11to12Arts: number;
+    };
+    admissionProcess: string[];
+    facultyCount: number;
+    studentTeacherRatio: string;
 }
 
 export interface FilterOptions {
     searchTerm: string;
     schoolType: string[];
     minRating: number;
-    location: string;
+    state: string;
+    city: string;
+    area: string;
     maxTuition: number;
-    features: string[];
+    amenities: string[];
+    schoolBoard: string[];
+    medium: string[];
 }
