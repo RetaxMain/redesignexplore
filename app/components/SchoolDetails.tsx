@@ -20,7 +20,9 @@ import {
     Mail,
     TrendingUp,
     Shield,
-    Zap
+    Zap,
+    CreditCard,
+    Calculator
 } from 'lucide-react';
 import { School } from '../types/school';
 
@@ -154,6 +156,79 @@ const SchoolDetails: React.FC<SchoolDetailsProps> = ({ school, onBack, onContact
                             </div>
                         </div>
 
+                        {/* Fee Structure */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                                <CreditCard className="h-5 w-5 mr-2 text-green-600" />
+                                Fee Structure
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <h3 className="font-semibold text-gray-800 flex items-center">
+                                        <Calculator className="h-4 w-4 mr-2 text-blue-600" />
+                                        Primary & Secondary
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-gray-700">Class 1-5</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {school.feeStructure.class1to5 === 0 ? 'Free' : `$${school.feeStructure.class1to5.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-gray-700">Class 6-8</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {school.feeStructure.class6to8 === 0 ? 'Free' : `$${school.feeStructure.class6to8.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-gray-700">Class 9-10</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {school.feeStructure.class9to10 === 0 ? 'Free' : `$${school.feeStructure.class9to10.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="font-semibold text-gray-800 flex items-center">
+                                        <GraduationCap className="h-4 w-4 mr-2 text-purple-600" />
+                                        Senior Secondary (11-12)
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                                            <span className="text-gray-700">Science Stream</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {school.feeStructure.class11to12Science === 0 ? 'Free' : `$${school.feeStructure.class11to12Science.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                            <span className="text-gray-700">Commerce Stream</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {school.feeStructure.class11to12Commerce === 0 ? 'Free' : `$${school.feeStructure.class11to12Commerce.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                                            <span className="text-gray-700">Arts Stream</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {school.feeStructure.class11to12Arts === 0 ? 'Free' : `$${school.feeStructure.class11to12Arts.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-semibold text-gray-900">Student-Teacher Ratio</h4>
+                                        <p className="text-sm text-gray-600">Optimal learning environment</p>
+                                    </div>
+                                    <div className="text-2xl font-bold text-blue-600">{school.studentTeacherRatio}</div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* About */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-4">About the School</h2>
@@ -192,6 +267,40 @@ const SchoolDetails: React.FC<SchoolDetailsProps> = ({ school, onBack, onContact
                             </div>
                         </div>
 
+                        {/* Amenities */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                <Target className="h-5 w-5 mr-2 text-indigo-600" />
+                                Amenities
+                            </h2>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {school.amenities.map((amenity, index) => (
+                                    <div key={index} className="flex items-center p-3 bg-indigo-50 rounded-lg">
+                                        <CheckCircle className="h-4 w-4 text-indigo-600 mr-2 flex-shrink-0" />
+                                        <span className="text-gray-800 text-sm">{amenity}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Admission Process */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                <Clock className="h-5 w-5 mr-2 text-orange-600" />
+                                Admission Process
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {school.admissionProcess.map((step, index) => (
+                                    <div key={index} className="flex items-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                                            {index + 1}
+                                        </div>
+                                        <span className="text-gray-800 font-medium">{step}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Achievements */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
@@ -214,7 +323,7 @@ const SchoolDetails: React.FC<SchoolDetailsProps> = ({ school, onBack, onContact
                     {/* Right Column - Contact & Quick Info */}
                     <div className="space-y-6">
                         {/* Contact Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6  top-24">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
 
                             <div className="space-y-4 mb-6">
@@ -288,12 +397,45 @@ const SchoolDetails: React.FC<SchoolDetailsProps> = ({ school, onBack, onContact
                                     <span className="text-blue-100">Established</span>
                                     <span className="font-semibold">{school.establishedYear}</span>
                                 </div>
-                                {school.tuitionFee && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-blue-100">Annual Fee</span>
-                                        <span className="font-semibold">${school.tuitionFee.toLocaleString()}</span>
-                                    </div>
-                                )}
+                                <div className="flex justify-between items-center">
+                                    <span className="text-blue-100">School Board</span>
+                                    <span className="font-semibold">{school.schoolBoard}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-blue-100">Medium</span>
+                                    <span className="font-semibold">{school.medium.join(', ')}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Fee Summary */}
+                        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl shadow-sm p-6 text-white">
+                            <h3 className="text-lg font-semibold mb-4">Fee Summary</h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-green-100">Primary (1-5)</span>
+                                    <span className="font-semibold">
+                                        {school.feeStructure.class1to5 === 0 ? 'Free' : `$${(school.feeStructure.class1to5 / 1000).toFixed(0)}K`}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-green-100">Middle (6-8)</span>
+                                    <span className="font-semibold">
+                                        {school.feeStructure.class6to8 === 0 ? 'Free' : `$${(school.feeStructure.class6to8 / 1000).toFixed(0)}K`}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-green-100">High (9-10)</span>
+                                    <span className="font-semibold">
+                                        {school.feeStructure.class9to10 === 0 ? 'Free' : `$${(school.feeStructure.class9to10 / 1000).toFixed(0)}K`}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-green-100">Senior (11-12)</span>
+                                    <span className="font-semibold">
+                                        {school.feeStructure.class11to12Science === 0 ? 'Free' : `$${(school.feeStructure.class11to12Science / 1000).toFixed(0)}K`}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
