@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, X, Building, BookOpen, Globe } from 'lucide-react';
 import { FilterOptions } from '../types/school';
+import { mockSchools } from '../data/mockSchools';
 
 interface SearchFiltersProps {
     filters: FilterOptions;
@@ -8,9 +9,14 @@ interface SearchFiltersProps {
 }
 
 const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange }) => {
-    const schoolTypes = ['Public', 'Private', 'Charter', 'International'];
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const searchRef = useRef<HTMLInputElement>(null);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
+
+    const schoolTypes = ['Public', 'Private', 'International'];
     const schoolBoards = ['CBSE', 'ICSE', 'IB', 'State Board'];
-    const mediums = ['English', 'Hindi', 'Spanish', 'French', 'German', 'Mandarin', 'Latin', 'Portuguese'];
+    const mediums = ['English', 'Hindi', "State Language"];
     const commonAmenities = [
         'Swimming Pool', 'Library', 'Computer Lab', 'Science Lab', 'Sports Ground',
         'Auditorium', 'Cafeteria', 'Transport', 'Medical Room', 'Playground',
@@ -27,7 +33,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
         'Colorado',
         'Tennessee',
         'Florida',
-        'Georgia'
+        'Georgia',
+        "Gujarat",
+        "Goa"
     ];
 
     const stateAbbreviationsMap: { [key: string]: string } = {
@@ -40,7 +48,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
         'Colorado': 'CO',
         'Tennessee': 'TN',
         'Florida': 'FL',
-        'Georgia': 'GA'
+        'Georgia': 'GA',
     };
 
     // --- IMPORTANT: UPDATED cities object to use STATE ABBREVIATIONS as keys ---
@@ -54,7 +62,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
         'CO': ['Denver', 'Colorado Springs', 'Aurora', 'Fort Collins'],
         'TN': ['Nashville', 'Memphis', 'Knoxville', 'Chattanooga'],
         'FL': ['Miami', 'Orlando', 'Tampa', 'Jacksonville'],
-        'GA': ['Atlanta', 'Augusta', 'Columbus', 'Savannah']
+        'GA': ['Atlanta', 'Augusta', 'Columbus', 'Savannah'],
     };
 
     const areas = {
@@ -68,8 +76,95 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
         'Denver': ['Green Valley', 'LoDo', 'Capitol Hill', 'Highlands'],
         'Nashville': ['Arts District', 'Music Row', 'Downtown', 'Gulch'],
         'Miami': ['Business District', 'South Beach', 'Brickell', 'Coral Gables'],
-        'Atlanta': ['Executive District', 'Midtown', 'Buckhead', 'Virginia Highland']
+        'Atlanta': ['Executive District', 'Midtown', 'Buckhead', 'Virginia Highland'],
     };
+
+    // Generate search suggestions
+    const generateSuggestions = (searchTerm: string) => {
+        if (!searchTerm || searchTerm.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        const searchLower = searchTerm.toLowerCase();
+        const allSuggestions = new Set<string>();
+
+        // Add school names
+        mockSchools.forEach(school => {
+            if (school.name.toLowerCase().includes(searchLower)) {
+                allSuggestions.add(school.name);
+            }
+        });
+
+        // Add locations
+        mockSchools.forEach(school => {
+            if (school.location.city.toLowerCase().includes(searchLower)) {
+                allSuggestions.add(school.location.city);
+            }
+            if (school.location.area.toLowerCase().includes(searchLower)) {
+                allSuggestions.add(school.location.area);
+            }
+        });
+
+        // Add features and amenities
+        mockSchools.forEach(school => {
+            school.features.forEach(feature => {
+                if (feature.toLowerCase().includes(searchLower)) {
+                    allSuggestions.add(feature);
+                }
+            });
+            school.amenities.forEach(amenity => {
+                if (amenity.toLowerCase().includes(searchLower)) {
+                    allSuggestions.add(amenity);
+                }
+            });
+            school.curriculum.forEach(curr => {
+                if (curr.toLowerCase().includes(searchLower)) {
+                    allSuggestions.add(curr);
+                }
+            });
+        });
+
+        // Add school types, boards, and mediums
+        [...schoolTypes, ...schoolBoards, ...mediums].forEach(item => {
+            if (item.toLowerCase().includes(searchLower)) {
+                allSuggestions.add(item);
+            }
+        });
+
+        setSuggestions(Array.from(allSuggestions).slice(0, 8));
+    };
+
+    // Handle search input change
+    const handleSearchChange = (value: string) => {
+        handleFilterChange('searchTerm', value);
+        generateSuggestions(value);
+        setShowSuggestions(true);
+    };
+
+    // Handle suggestion click
+    const handleSuggestionClick = (suggestion: string) => {
+        handleFilterChange('searchTerm', suggestion);
+        setShowSuggestions(false);
+        setSuggestions([]);
+    };
+
+    // Handle click outside to close suggestions
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                searchRef.current &&
+                !searchRef.current.contains(event.target as Node) &&
+                suggestionsRef.current &&
+                !suggestionsRef.current.contains(event.target as Node)
+            ) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleFilterChange = (key: keyof FilterOptions, value: any) => {
         console.log(`SearchFilters: Attempting to change ${String(key)} to:`, value);
@@ -107,10 +202,90 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
     const availableCities = filters.state ? cities[filters.state as keyof typeof cities] || [] : [];
     const availableAreas = filters.city ? areas[filters.city as keyof typeof areas] || [] : [];
 
-    console.log('Current State:', filters.state);
-    console.log('Current City:', filters.city);
-    console.log('Available Cities:', availableCities);
-    console.log('Available Areas:', availableAreas);
+    const renderActiveFilterTags = () => {
+        const tags = [];
+
+        if (filters.searchTerm) {
+            tags.push(
+                <span key="searchTerm" className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    Search: &quot;{filters.searchTerm}&quot;
+                </span>
+            );
+        }
+
+        if (filters.schoolType.length > 0) {
+            tags.push(
+                <span key="schoolType" className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    {filters.schoolType.length} School Type{filters.schoolType.length > 1 ? 's' : ''}
+                </span>
+            );
+        }
+
+        if (filters.state) {
+            const fullStateName = Object.keys(stateAbbreviationsMap).find(key => stateAbbreviationsMap[key] === filters.state) || filters.state;
+            tags.push(
+                <span key="state" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    State: {fullStateName}
+                </span>
+            );
+        }
+        if (filters.city) {
+            tags.push(
+                <span key="city" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    City: {filters.city}
+                </span>
+            );
+        }
+        if (filters.area) {
+            tags.push(
+                <span key="area" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Area: {filters.area}
+                </span>
+            );
+        }
+
+        if (filters.amenities.length > 0) {
+            tags.push(
+                <span key="amenities" className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">
+                    {filters.amenities.length} Amenity{filters.amenities.length > 1 ? 's' : ''}
+                </span>
+            );
+        }
+
+        if (filters.schoolBoard.length > 0) {
+            tags.push(
+                <span key="schoolBoard" className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                    {filters.schoolBoard.length} Board{filters.schoolBoard.length > 1 ? 's' : ''}
+                </span>
+            );
+        }
+
+        if (filters.medium.length > 0) {
+            tags.push(
+                <span key="medium" className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                    {filters.medium.length} Medium{filters.medium.length > 1 ? 's' : ''}
+                </span>
+            );
+        }
+
+        if (filters.minRating > 0) {
+            tags.push(
+                <span key="minRating" className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+                    Min Rating: {filters.minRating}+ Stars
+                </span>
+            );
+        }
+
+        if (filters.maxTuition < 50000) {
+            tags.push(
+                <span key="maxTuition" className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Max Tuition: ${filters.maxTuition.toLocaleString()}
+                </span>
+            );
+        }
+
+        return tags;
+    };
 
 
     return (
@@ -127,16 +302,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
                     </div>
                     {hasActiveFilters && (
                         <span className="ml-4 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">
-                            {[
-                                filters.searchTerm && 'Search',
-                                filters.schoolType.length && `${filters.schoolType.length} Type${filters.schoolType.length > 1 ? 's' : ''}`,
-                                // Display the full state name for active filters for better UX
-                                filters.state && (Object.keys(stateAbbreviationsMap).find(key => stateAbbreviationsMap[key] === filters.state) || filters.state),
-                                filters.amenities.length && `${filters.amenities.length} Amenities`,
-                                filters.schoolBoard.length && `${filters.schoolBoard.length} Board${filters.schoolBoard.length > 1 ? 's' : ''}`,
-                                filters.medium.length && `${filters.medium.length} Medium${filters.medium.length > 1 ? 's' : ''}`,
-                                filters.minRating > 0 && 'Rating'
-                            ].filter(Boolean).join(', ')}
+                            {renderActiveFilterTags().length} Active Filter{renderActiveFilterTags().length !== 1 ? 's' : ''}
                         </span>
                     )}
                 </div>
@@ -152,16 +318,44 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange 
             </div>
 
             <div className="p-6">
-                {/* Search Bar */}
+                {/* Search Bar with Suggestions */}
                 <div className="relative mb-8">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                     <input
+                        ref={searchRef}
                         type="text"
                         placeholder="Search schools, programs, locations, or specializations..."
                         value={filters.searchTerm}
-                        onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        onFocus={() => {
+                            if (filters.searchTerm.length >= 2) {
+                                generateSuggestions(filters.searchTerm);
+                                setShowSuggestions(true);
+                            }
+                        }}
                         className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-gray-50 hover:bg-white"
                     />
+
+                    {/* Search Suggestions Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div
+                            ref={suggestionsRef}
+                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+                        >
+                            {suggestions.map((suggestion, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleSuggestionClick(suggestion)}
+                                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-700 border-b border-gray-100 last:border-b-0"
+                                >
+                                    <div className="flex items-center">
+                                        <Search className="h-4 w-4 text-gray-400 mr-3" />
+                                        <span>{suggestion}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
